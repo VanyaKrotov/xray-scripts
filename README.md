@@ -18,8 +18,8 @@ sudo apt update & sudo apt upgrade
 sudo bash -c "$(curl -sL https://github.com/Gozargah/Marzban-scripts/raw/master/marzban-node.sh)" @ install
 ```
 
-### Setup masked website
+### Setup masked website for you domain
 
 ```sh
-sudo bash -c "$(curl -sL https://github.com/Gozargah/Marzban-scripts/raw/master/marzban-node.sh)" @ install
+sudo bash -c "$(curl -sL https://github.com/VanyaKrotov/xray-scripts/raw/refs/heads/main/setup-masking-site.sh)" @ example.com ~/home/www/webpage/
 ```
