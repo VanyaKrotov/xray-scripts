@@ -41,7 +41,7 @@ sudo ufw allow 'Nginx Full'
 mkdir -p "$HTML_PATH"
 RANDOM_URL=${URLS[$RANDOM % ${#URLS[@]}]}
 echo "[INFO] Downloading file: $RANDOM_URL"
-curl -s "$RANDOM_URL" -o "$HTML_PATH/index.html"
+sudo curl -o "$HTML_PATH/index.html" index.html "$RANDOM_URL"
 
 # 4. Add nginx configuration
 CONF_PATH="/etc/nginx/sites-available/$DOMAIN"
