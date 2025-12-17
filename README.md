@@ -21,5 +21,5 @@ sudo bash -c "$(curl -sL https://github.com/Gozargah/Marzban-scripts/raw/master/
 ### Setup masked website for you domain
 
 ```sh
-sudo bash -c "$(curl -sL https://github.com/VanyaKrotov/xray-scripts/raw/refs/heads/main/setup-masking-site.sh)" @ example.com ~/home/www/webpage/
+sudo bash -c "$(curl -sL https://github.com/VanyaKrotov/xray-scripts/raw/refs/heads/main/setup_masking_site.sh)" @ example.com ~/home/www/webpage/
 ```
