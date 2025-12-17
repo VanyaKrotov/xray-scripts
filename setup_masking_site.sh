@@ -70,8 +70,19 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# 5. Reload nginx
+# 5. Install Certbot and plugins
+echo "[INFO] Installing Certbot and plugins..."
+sudo apt install -y certbot python3-certbot-nginx
+
+# Optional: install DNS plugins if needed
+# sudo apt install -y python3-certbot-dns-cloudflare python3-certbot-dns-route53
+
+# 6. Obtain SSL certificate
+echo "[INFO] Requesting SSL certificate for $DOMAIN..."
+sudo certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos -m admin@$DOMAIN
+
+# 7. Reload nginx
 echo "[INFO] Reloading Nginx..."
 sudo systemctl reload nginx
 
-echo "[SUCCESS] Domain $DOMAIN is configured and serving $HTML_PATH/index.html"
+echo "[SUCCESS] Domain $DOMAIN is configured with SSL and serving $HTML_PATH/index.html"
