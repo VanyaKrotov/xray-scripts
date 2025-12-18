@@ -22,26 +22,26 @@ URLS=(
 echo "[INFO] Installing Nginx..."
 sudo apt update && sudo apt install -y nginx
 
-# 2. Ensure UFW is installed and configured
-if ! command -v ufw >/dev/null 2>&1; then
-  echo "[INFO] UFW is not installed. Installing..."
-  sudo apt install -y ufw
-fi
+# # 2. Ensure UFW is installed and configured
+# if ! command -v ufw >/dev/null 2>&1; then
+#   echo "[INFO] UFW is not installed. Installing..."
+#   sudo apt install -y ufw
+# fi
 
-UFW_STATUS=$(sudo ufw status | grep -i "Status:" | awk '{print $2}')
-if [ "$UFW_STATUS" != "active" ]; then
-  echo "[INFO] Enabling UFW..."
-  sudo ufw enable
-fi
+# UFW_STATUS=$(sudo ufw status | grep -i "Status:" | awk '{print $2}')
+# if [ "$UFW_STATUS" != "active" ]; then
+#   echo "[INFO] Enabling UFW..."
+#   sudo ufw enable
+# fi
 
-echo "[INFO] Allowing Nginx Full profile in UFW..."
-sudo ufw allow 'Nginx Full'
+# echo "[INFO] Allowing Nginx Full profile in UFW..."
+# sudo ufw allow 'Nginx Full'
 
 # 3. Download random file
 mkdir -p "$HTML_PATH"
 RANDOM_URL=${URLS[$RANDOM % ${#URLS[@]}]}
 echo "[INFO] Downloading file: $RANDOM_URL"
-sudo curl -o "$HTML_PATH/index.html" index.html "$RANDOM_URL"
+sudo curl -L "$RANDOM_URL" -o "$HTML_PATH/index.html"
 
 # 4. Add nginx configuration
 CONF_PATH="/etc/nginx/sites-available/$DOMAIN"
@@ -52,7 +52,7 @@ sudo bash -c "cat > $CONF_PATH" <<EOF
 server {
     listen 80;
     server_name $DOMAIN;
-    root $HTML_PATH;
+    root $HTML_PATH/;
     index index.html;
 }
 EOF
