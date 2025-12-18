@@ -36,18 +36,23 @@ if [ $? -ne 0 ]; then
 fi
 
 # Reload Nginx
-sudo service nginx reload
+sudo systemctl reload nginx
 
-# Install Certbot and plugins
-echo "[INFO] Installing Certbot and plugins..."
-sudo apt update
-sudo apt install -y certbot python3-certbot-nginx
-
-# Optional: install DNS plugins if needed
-# sudo apt install -y python3-certbot-dns-cloudflare python3-certbot-dns-route53
+# ---- Install Certbot only if missing ----
+if ! command -v certbot >/dev/null 2>&1; then
+  echo "[INFO] Certbot not found. Installing..."
+  sudo apt update
+  sudo apt install -y certbot python3-certbot-nginx
+else
+  echo "[INFO] Certbot already installed. Skipping installation."
+fi
 
 # Obtain SSL certificate
 echo "[INFO] Requesting SSL certificate for $DOMAIN..."
-sudo certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos -m admin@$DOMAIN
+sudo certbot --nginx \
+  -d "$DOMAIN" \
+  --non-interactive \
+  --agree-tos \
+  -m admin@$DOMAIN
 
 echo "[SUCCESS] Domain $DOMAIN is configured with SSL"
