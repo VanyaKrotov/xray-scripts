@@ -9,17 +9,21 @@ URLS=(
   "https://github.com/VanyaKrotov/css-animations/raw/refs/heads/main/animations/shadow-animation.html"
 )
 
-# 1. Install nginx
-echo "[INFO] Installing Nginx..."
-sudo apt update && sudo apt install -y nginx
+# 1. Check if nginx is installed
+if dpkg -l | grep -q nginx; then
+    echo "[INFO] Nginx is already installed. Skipping installation."
+else
+    echo "[INFO] Installing Nginx..."
+    sudo apt update && sudo apt install -y nginx
+fi
 
-# 3. Download random file
+# 2. Download random file
 RANDOM_URL=${URLS[$RANDOM % ${#URLS[@]}]}
 echo "[INFO] Downloading file: $RANDOM_URL"
 sudo curl -L "$RANDOM_URL" -o "/var/www/html/index.html"
 
-# 4. Reload nginx
+# 3. Reload nginx
 echo "[INFO] Reloading Nginx..."
 sudo systemctl reload nginx
 
-echo "[SUCCESS] Configured with SSL and serving nginx default"
+echo "[SUCCESS] Nginx is configured and serving the downloaded file."
