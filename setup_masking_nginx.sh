@@ -16,7 +16,7 @@ sudo apt update && sudo apt install -y nginx
 # 3. Download random file
 RANDOM_URL=${URLS[$RANDOM % ${#URLS[@]}]}
 echo "[INFO] Downloading file: $RANDOM_URL"
-sudo curl -L "$RANDOM_URL" -o "var/www/html/index.html"
+sudo curl -L "$RANDOM_URL" -o "/var/www/html/index.html"
 
 # 4. Reload nginx
 echo "[INFO] Reloading Nginx..."
