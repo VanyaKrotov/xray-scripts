@@ -27,5 +27,13 @@ sudo bash -c "$(curl -sL https://github.com/VanyaKrotov/xray-scripts/raw/refs/he
 ### Setup cert
 
 ```sh
+# first setup cert in node 
 sudo bash -c "$(curl -sL https://github.com/VanyaKrotov/xray-scripts/raw/refs/heads/main/setup_cert.sh)" / DOMAIN
+
+# move archive to main server
+scp root@NODE_SERVER_IP:/root/marzban_cert_DOMAIN.com.tar.gz .
+
+# unpackage archive
+
+sudo bash -c "$(curl -sL https://github.com/VanyaKrotov/xray-scripts/raw/refs/heads/main/unpack_certs.sh)" / DOMAIN PATH_TO_ARCHIVE
 ```
