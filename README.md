@@ -27,5 +27,5 @@ sudo bash -c "$(curl -sL https://github.com/VanyaKrotov/xray-scripts/raw/refs/he
 ### Setup cert
 
 ```sh
-sudo bash -c "$(curl -sL https://github.com/VanyaKrotov/xray-scripts/raw/refs/heads/main/setup_cert.sh)"
+sudo bash -c "$(curl -sL https://github.com/VanyaKrotov/xray-scripts/raw/refs/heads/main/setup_cert.sh)" / DOMAIN
 ```
