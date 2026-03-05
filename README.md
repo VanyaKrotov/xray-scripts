@@ -31,9 +31,14 @@ sudo bash -c "$(curl -sL https://github.com/VanyaKrotov/xray-scripts/raw/refs/he
 sudo bash -c "$(curl -sL https://github.com/VanyaKrotov/xray-scripts/raw/refs/heads/main/setup_cert.sh)" / DOMAIN
 
 # move archive to main server
-scp root@NODE_SERVER_IP:/root/marzban_cert_DOMAIN.com.tar.gz .
+scp root@NODE_SERVER_IP:/root/marzban_cert_DOMAIN.tar.gz .
 
 # unpackage archive
 
 sudo bash -c "$(curl -sL https://github.com/VanyaKrotov/xray-scripts/raw/refs/heads/main/unpack_certs.sh)" / DOMAIN PATH_TO_ARCHIVE
+
+# or
+
+sudo bash -c "$(curl -sL https://github.com/VanyaKrotov/xray-scripts/raw/refs/heads/main/load_and_unpack_certs.sh)"
+
 ```
