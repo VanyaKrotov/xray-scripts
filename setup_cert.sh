@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# 1. Get the domain name
 read -p "Enter domain: " DOMAIN
 
 if [ -z "$DOMAIN" ]; then
@@ -13,15 +14,15 @@ CERT_DIR="/opt/marzban_certs/$DOMAIN"
 ARCHIVE_NAME="marzban_cert_${DOMAIN}.tar.gz"
 
 
-# 1. Install dependencies and acme.sh
+# 2. Install dependencies and acme.sh
 sudo apt update && sudo apt install -y socat tar
 curl https://get.acme.sh | sh -s email=$EMAIL
 source ~/.bashrc
 
-# 2. Create directory for certificates
+# 3. Create directory for certificates
 mkdir -p $CERT_DIR
 
-# 3. Obtain certificate
+# 4. Obtain certificate
 # Stop Nginx if it is running to free port 80
 if systemctl is-active --quiet nginx; then
     echo "Stopping Nginx..."
@@ -31,7 +32,7 @@ fi
 
 ~/.acme.sh/acme.sh --set-default-ca --server letsencrypt --issue --issue -d $DOMAIN --standalone --force
 
-# 4. Copy files to working directory
+# 5. Copy files to working directory
 ~/.acme.sh/acme.sh --install-cert -d $DOMAIN \
     --key-file "$CERT_DIR/key.pem" \
     --fullchain-file "$CERT_DIR/fullchain.pem"
@@ -42,7 +43,7 @@ if [ "$NGINX_STOPPED" = true ]; then
     sudo systemctl start nginx
 fi
 
-# 5. Pack into archive
+# 6. Pack into archive
 tar -czvf $ARCHIVE_NAME -C $CERT_DIR .
 
 echo "---------------------------------------------------"
