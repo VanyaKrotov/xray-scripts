@@ -13,11 +13,6 @@ CERT_DIR="/opt/marzban_certs/$DOMAIN"
 ARCHIVE_NAME="marzban_cert_${DOMAIN}.tar.gz"
 
 
-if [ -z "$DOMAIN" ]; then
-    echo "Error: Specify domain. Example: ./setup_cert.sh example.com"
-    exit 1
-fi
-
 # 1. Install dependencies and acme.sh
 sudo apt update && sudo apt install -y socat tar
 curl https://get.acme.sh | sh -s email=$EMAIL
