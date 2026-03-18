@@ -1,10 +1,17 @@
 #!/bin/bash
 
+read -p "Enter domain: " DOMAIN
+
+if [ -z "$DOMAIN" ]; then
+    echo "Error: Domain is empty."
+    exit 1
+fi
+
 # Variables
-DOMAIN=$1
 EMAIL="example@gmail.com" # Replace with your email
 CERT_DIR="/opt/marzban_certs/$DOMAIN"
 ARCHIVE_NAME="marzban_cert_${DOMAIN}.tar.gz"
+
 
 if [ -z "$DOMAIN" ]; then
     echo "Error: Specify domain. Example: ./setup_cert.sh example.com"
@@ -27,7 +34,7 @@ if systemctl is-active --quiet nginx; then
     NGINX_STOPPED=true
 fi
 
-~/.acme.sh/acme.sh --set-default-ca --server letsencrypt --issue --issue -d $DOMAIN --standalone
+~/.acme.sh/acme.sh --set-default-ca --server letsencrypt --issue --issue -d $DOMAIN --standalone --force
 
 # 4. Copy files to working directory
 ~/.acme.sh/acme.sh --install-cert -d $DOMAIN \
