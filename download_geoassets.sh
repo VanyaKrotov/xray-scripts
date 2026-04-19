@@ -65,6 +65,58 @@ download_file() {
 	echof "Installed: $DEST/$file"
 }
 
+download_file_by_url() {
+	local file="$1"
+	local url="$2"
+	local tmp
+	tmp=$(mktemp 2>/dev/null || echo "/tmp/$file.$$")
+
+	echof "Downloading $file from $url..."
+	local rc=0
+	if command -v curl >/dev/null 2>&1; then
+		curl -fsSL --retry 3 --retry-delay 1 "$url" -o "$tmp" || rc=$?
+	elif command -v wget >/dev/null 2>&1; then
+		wget -q --tries=3 --timeout=10 -O "$tmp" "$url" || rc=$?
+	else
+		echof "Error: curl or wget required to download files." >&2
+		rm -f "$tmp" || true
+		return 2
+	fi
+
+	if [ "$rc" -ne 0 ]; then
+		echof "Download failed (code $rc): $url" >&2
+		rm -f "$tmp" || true
+		return $rc
+	fi
+
+	if [ ! -s "$tmp" ]; then
+		echof "Downloaded file is empty: $file" >&2
+		rm -f "$tmp" || true
+		return 4
+	fi
+
+	if ! mkdir -p "$DEST" 2>/dev/null; then
+		echof "Creating $DEST requires root — using sudo..."
+		if ! command -v sudo >/dev/null 2>&1; then
+			echof "Error: cannot create $DEST and sudo is not available." >&2
+			rm -f "$tmp" || true
+			return 3
+		fi
+		sudo mkdir -p "$DEST"
+	fi
+
+	if ! mv "$tmp" "$DEST/$file" 2>/dev/null; then
+		echof "Moving file requires root — using sudo..."
+		sudo mv "$tmp" "$DEST/$file"
+	fi
+
+	if ! chmod 644 "$DEST/$file" 2>/dev/null; then
+		sudo chmod 644 "$DEST/$file" || true
+	fi
+
+	echof "Installed: $DEST/$file"
+}
+
 main() {
 	echof "Resolving latest release via GitHub API..."
 	api_url="https://api.github.com/repos/runetfreedom/russia-v2ray-rules-dat/releases/latest"
@@ -104,22 +156,45 @@ main() {
 
 	REPO_DOWNLOAD_BASE="$REPO_BASE/releases/download/$tag"
 	for f in "${FILES[@]}"; do
-		# try to obtain direct asset URL from API JSON
+		echof "Resolving asset for '$f'..."
+		asset_url=
 		if [ -n "${json:-}" ]; then
-			url=$(printf '%s' "$json" | grep -A5 "\"name\": \"$f\"" | grep '"browser_download_url"' | head -n1 | sed -E 's/.*"browser_download_url":\s*"([^"]+)".*/\1/')
-			if [ -n "${url:-}" ]; then
-				REPO_DOWNLOAD_BASE="$(dirname "$url")"
-			else
-				REPO_DOWNLOAD_BASE="$REPO_BASE/releases/download/$tag"
+			# prefer exact name, then case-insensitive contains match
+			asset_url=$(printf '%s' "$json" | grep -A5 "\"name\": \"$f\"" | grep '"browser_download_url"' | head -n1 | sed -E 's/.*"browser_download_url":\s*"([^"]+)".*/\1/')
+			if [ -z "${asset_url:-}" ]; then
+				# fallback: find any asset name containing geoip/geosite (case-insensitive)
+				if printf '%s' "$f" | grep -qi geoip; then
+					pattern=geoip
+				else
+					pattern=geosite
+				fi
+				asset_url=$(printf '%s' "$json" | grep -i -B3 "\"name\": *\"[^"]*${pattern}[^"]*\"" | grep '"browser_download_url"' | head -n1 | sed -E 's/.*"browser_download_url":\s*"([^"]+)".*/\1/')
 			fi
-		else
-			REPO_DOWNLOAD_BASE="$REPO_BASE/releases/download/$tag"
 		fi
 
-		if ! download_file "$f"; then
-			echof "Failed to download $f" >&2
-			exit 1
+		if [ -n "${asset_url:-}" ]; then
+			echof "Found asset URL: $asset_url"
+			if ! download_file_by_url "$f" "$asset_url"; then
+				echof "Failed to download $f from $asset_url" >&2
+				exit 1
+			fi
+			continue
 		fi
+
+		# No direct asset found, try default releases/download/<tag>/<file> and some compressed variants
+		tried=0
+		for candidate in "$REPO_BASE/releases/download/$tag/$f" "$REPO_BASE/releases/download/$tag/${f}.gz" "$REPO_BASE/releases/download/$tag/${f}.xz"; do
+			echof "Trying $candidate"
+			tried=$((tried+1))
+			if download_file_by_url "$f" "$candidate"; then
+				break
+			fi
+			# if last candidate failed, exit with error
+			if [ "$tried" -eq 3 ]; then
+				echof "All attempts failed for $f" >&2
+				exit 1
+			fi
+		done
 	done
 	echof "All files downloaded to $DEST"
 }
