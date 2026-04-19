@@ -45,5 +45,5 @@ sudo bash -c "$(curl -sL https://github.com/VanyaKrotov/xray-scripts/raw/refs/he
 ### download geo assets
 
 ```sh
-sudo bash -c "$(curl -sL https://github.com/VanyaKrotov/xray-scripts/raw/refs/heads/main/download_geoassets.sh)"
+sudo bash -c "$(curl -sL https://github.com/VanyaKrotov/xray-scripts/raw/refs/heads/main/update_xray_rules.sh)"
 ```
