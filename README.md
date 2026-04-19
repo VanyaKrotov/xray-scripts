@@ -40,5 +40,10 @@ sudo bash -c "$(curl -sL https://github.com/VanyaKrotov/xray-scripts/raw/refs/he
 # or
 
 sudo bash -c "$(curl -sL https://github.com/VanyaKrotov/xray-scripts/raw/refs/heads/main/load_and_unpack_certs.sh)"
+```
 
+### download geo assets
+
+```sh
+sudo bash -c "$(curl -sL https://github.com/VanyaKrotov/xray-scripts/raw/refs/heads/main/download_geoassets.sh)"
 ```
