@@ -8,6 +8,7 @@ DEST="/usr/local/share/xray"
 
 echof() { printf '%s\n' "$*"; }
 
+
 download_file() {
 	local file="$1"
 	local url="$REPO_DOWNLOAD_BASE/$file"
@@ -15,14 +16,28 @@ download_file() {
 	tmp=$(mktemp 2>/dev/null || echo "/tmp/$file.$$")
 
 	echof "Downloading $file from $url..."
+	local rc=0
 	if command -v curl >/dev/null 2>&1; then
-		curl -fsSL --retry 3 --retry-delay 1 "$url" -o "$tmp"
+		curl -fsSL --retry 3 --retry-delay 1 "$url" -o "$tmp" || rc=$?
 	elif command -v wget >/dev/null 2>&1; then
-		wget -q --tries=3 --timeout=10 -O "$tmp" "$url"
+		wget -q --tries=3 --timeout=10 -O "$tmp" "$url" || rc=$?
 	else
 		echof "Error: curl or wget required to download files." >&2
 		rm -f "$tmp" || true
 		return 2
+	fi
+
+	if [ "$rc" -ne 0 ]; then
+		echof "Download failed (code $rc): $url" >&2
+		rm -f "$tmp" || true
+		return $rc
+	fi
+
+	# Basic validation: non-empty file
+	if [ ! -s "$tmp" ]; then
+		echof "Downloaded file is empty: $file" >&2
+		rm -f "$tmp" || true
+		return 4
 	fi
 
 	# Ensure destination exists (try without sudo, fall back to sudo)
@@ -51,25 +66,54 @@ download_file() {
 }
 
 main() {
-	echof "Resolving latest release tag from $REPO_RELEASES_LATEST..."
+	echof "Resolving latest release via GitHub API..."
+	api_url="https://api.github.com/repos/runetfreedom/russia-v2ray-rules-dat/releases/latest"
 	if command -v curl >/dev/null 2>&1; then
-		latest_url=$(curl -sI -o /dev/null -w "%{url_effective}" "$REPO_RELEASES_LATEST")
+		json=$(curl -s --fail "$api_url" ) || json=
 	elif command -v wget >/dev/null 2>&1; then
-		latest_url=$(wget --server-response --max-redirect=0 "$REPO_RELEASES_LATEST" 2>&1 | awk '/Location: /{print $2}' | tail -n1)
+		json=$(wget -q -O - "$api_url" 2>/dev/null) || json=
 	else
-		echof "Error: curl or wget required to resolve latest release." >&2
+		echof "Error: curl or wget required to query GitHub API." >&2
 		exit 2
 	fi
 
-	if [ -z "${latest_url:-}" ]; then
-		echof "Could not determine latest release URL." >&2
-		exit 2
+	if [ -n "${json:-}" ]; then
+		tag=$(printf '%s' "$json" | grep -m1 '"tag_name"' | sed -E 's/.*"tag_name":\s*"([^"]+)".*/\1/')
+	else
+		tag=
 	fi
 
-	tag=$(basename "$latest_url")
+	if [ -z "${tag:-}" ]; then
+		echof "Could not determine tag via API, falling back to releases/latest redirect..."
+		if command -v curl >/dev/null 2>&1; then
+			latest_url=$(curl -sI -o /dev/null -w "%{url_effective}" "$REPO_RELEASES_LATEST")
+		elif command -v wget >/dev/null 2>&1; then
+			latest_url=$(wget --server-response --max-redirect=0 "$REPO_RELEASES_LATEST" 2>&1 | awk '/Location: /{print $2}' | tail -n1)
+		fi
+		if [ -n "${latest_url:-}" ] && [ "$latest_url" != "$REPO_RELEASES_LATEST" ]; then
+			tag=$(basename "$latest_url")
+		else
+			echof "Unable to resolve latest release tag." >&2
+			exit 2
+		fi
+	else
+		echof "Latest release tag (from API): $tag"
+	fi
+
 	REPO_DOWNLOAD_BASE="$REPO_BASE/releases/download/$tag"
-	echof "Latest release tag: $tag"
 	for f in "${FILES[@]}"; do
+		# try to obtain direct asset URL from API JSON
+		if [ -n "${json:-}" ]; then
+			url=$(printf '%s' "$json" | grep -A5 "\"name\": \"$f\"" | grep '"browser_download_url"' | head -n1 | sed -E 's/.*"browser_download_url":\s*"([^"]+)".*/\1/')
+			if [ -n "${url:-}" ]; then
+				REPO_DOWNLOAD_BASE="$(dirname "$url")"
+			else
+				REPO_DOWNLOAD_BASE="$REPO_BASE/releases/download/$tag"
+			fi
+		else
+			REPO_DOWNLOAD_BASE="$REPO_BASE/releases/download/$tag"
+		fi
+
 		if ! download_file "$f"; then
 			echof "Failed to download $f" >&2
 			exit 1
