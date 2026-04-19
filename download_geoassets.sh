@@ -83,6 +83,8 @@ main() {
 		tag=
 	fi
 
+    echof "Latest release tag (from API): $tag"
+
 	if [ -z "${tag:-}" ]; then
 		echof "Could not determine tag via API, falling back to releases/latest redirect..."
 		if command -v curl >/dev/null 2>&1; then
