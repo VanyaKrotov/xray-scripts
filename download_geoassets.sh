@@ -85,22 +85,22 @@ main() {
 
     echof "Latest release tag (from API): $tag"
 
-	if [ -z "${tag:-}" ]; then
-		echof "Could not determine tag via API, falling back to releases/latest redirect..."
-		if command -v curl >/dev/null 2>&1; then
-			latest_url=$(curl -sI -o /dev/null -w "%{url_effective}" "$REPO_RELEASES_LATEST")
-		elif command -v wget >/dev/null 2>&1; then
-			latest_url=$(wget --server-response --max-redirect=0 "$REPO_RELEASES_LATEST" 2>&1 | awk '/Location: /{print $2}' | tail -n1)
-		fi
-		if [ -n "${latest_url:-}" ] && [ "$latest_url" != "$REPO_RELEASES_LATEST" ]; then
-			tag=$(basename "$latest_url")
-		else
-			echof "Unable to resolve latest release tag." >&2
-			exit 2
-		fi
-	else
-		echof "Latest release tag (from API): $tag"
-	fi
+	# if [ -z "${tag:-}" ]; then
+	# 	echof "Could not determine tag via API, falling back to releases/latest redirect..."
+	# 	if command -v curl >/dev/null 2>&1; then
+	# 		latest_url=$(curl -sI -o /dev/null -w "%{url_effective}" "$REPO_RELEASES_LATEST")
+	# 	elif command -v wget >/dev/null 2>&1; then
+	# 		latest_url=$(wget --server-response --max-redirect=0 "$REPO_RELEASES_LATEST" 2>&1 | awk '/Location: /{print $2}' | tail -n1)
+	# 	fi
+	# 	if [ -n "${latest_url:-}" ] && [ "$latest_url" != "$REPO_RELEASES_LATEST" ]; then
+	# 		tag=$(basename "$latest_url")
+	# 	else
+	# 		echof "Unable to resolve latest release tag." >&2
+	# 		exit 2
+	# 	fi
+	# else
+	# 	echof "Latest release tag (from API): $tag"
+	# fi
 
 	REPO_DOWNLOAD_BASE="$REPO_BASE/releases/download/$tag"
 	for f in "${FILES[@]}"; do
